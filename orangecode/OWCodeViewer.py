@@ -1,6 +1,5 @@
 import sys
 import numpy
-#import PythonHighlighter
 from orangecode.CodeEditorWidget import CodeEditorWidget
 
 import AnyQt.QtCore
@@ -18,19 +17,23 @@ from Orange.widgets.widget import OWWidget, Input, Output
 from Orange.widgets import gui
 #from repr import repr
 
-from Orange.data import Table,Variable
-
+from Orange.data import Table,Variable,Domain,ContinuousVariable, DiscreteVariable, StringVariable
 from numpy import float64
+from numpy import nan
+
+import os, math
 
 class OWCodeViewer(OWWidget):
     name = "Code Viewer"
     description = "Display"
     icon = "icons/Code.svg"
     priority = 10
+    keywords = ["source", "code", "display" ,"programming"]
     directory = ""
 
+
     class Inputs:
-        data = Input("Path to Source Code", Orange.data.Table)
+        data = Input("Source Code", Orange.data.Table)
 
     #class Outputs:
     #    sample = Output("Sampled Data", Orange.data.Table)
@@ -39,8 +42,6 @@ class OWCodeViewer(OWWidget):
 
     def __init__(self):
         super().__init__()
-
-        self.setupEditor()
 
         # GUI
         box = gui.widgetBox(self.controlArea, "Info")
@@ -56,11 +57,6 @@ class OWCodeViewer(OWWidget):
         #self.directory = "C:\\Code\\samples\\juliet-test-suite\\"
         #self.set_data(Table("orangecode/test.csv"))
 
-    def setupEditor(self):
-        font = QFont()
-        font.setFamily('Courier')
-        font.setFixedPitch(True)
-        font.setPointSize(10)
 
     @Inputs.data
     def set_data(self, dataset):
@@ -68,6 +64,8 @@ class OWCodeViewer(OWWidget):
             if(len(dataset) < 1):
                 self.display_no_source_selected()
             else:
+                #import code
+                #code.interact(local=dict(globals(), **locals()))
                 self.process_line(dataset[0])
         else:
             self.display_no_source_selected()
@@ -77,17 +75,43 @@ class OWCodeViewer(OWWidget):
         self.update_source_file()
 
     def process_line(self,line):
+        """
+        The extraction is based on columns name and values to avoid manual configuration.
+        It is expected that 
+        """
+
         self.source_file = ""
         self.source_line = -1
-        for cell in line.list:
-            #val = cell.value
-            val = cell
-            #print(repr())
-            if(self.is_source_file(val)):
+
+        index_file = -1
+        index_line = -1
+
+        #Guessing based on values
+        for i, var in enumerate(line.domain.variables):
+            if var.is_discrete and "file" in var.name.lower():
+                index_file = i
+            elif "line" in var.name.lower():
+                index_line = i
+
+        for i, cell in enumerate(line.values()):
+            val = cell.value
+
+            #Using index found previously
+            if index_file == i:
                 self.source_file = val
-            if(self.source_line == -1 and (isinstance(val, float))):
+            if index_line == i and (isinstance(val, float)) and not(math.isnan(val)):
                 self.source_line = int(val)
-        print("{}:{}".format(self.source_file,self.source_line))
+
+            #Guessing based on values
+            if(self.source_file != "" and self.is_source_file(val)):
+                self.source_file = val
+            if(self.source_line == -1 and (isinstance(val, float))) and not(math.isnan(val)):
+                self.source_line = int(val)
+
+        #print("{}:{}".format(self.source_file,self.source_line))
+        if(self.source_file != ""):
+            filename, extension = os.path.splitext(self.source_file)
+            self.code_editor.set_highlighter(extension)
         self.update_source_file()
 
     def update_source_file(self):

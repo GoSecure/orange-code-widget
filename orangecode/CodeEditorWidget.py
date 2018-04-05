@@ -11,9 +11,36 @@ from AnyQt.QtGui import (
 from AnyQt.QtCore import (
     Qt, QRegExp, QByteArray, QItemSelectionModel, Signal, QObject, QRect
 )
-from orangecode.PythonSyntaxHighlighter import PythonSyntaxHighlighter
-from orangecode.PythonSyntaxHighlighter import colorize
+#from orangecode.PythonSyntaxHighlighter import PythonSyntaxHighlighter
+#from orangecode.PythonSyntaxHighlighter import colorize
 import math
+from orangecode.highlighter.PythonHighlighter import PythonHighlighter
+from orangecode.highlighter.CsHighlighter import CsHighlighter
+from orangecode.highlighter.CppHighlighter import CppHighlighter
+from orangecode.highlighter.NoneHighlighter import NoneHighlighter
+
+def colorize(c1, c1_strength, c2, c2_strength):
+    """Convenience method for making a color from 2 existing colors.
+    :param c1: QtGui.QColor 1
+    :param c1_strength: int factor of the strength of this color
+    :param c2: QtGui.QColor 2
+    :param c2_strength: int factor of the strength of this color
+    This is primarily used to prevent hardcoding of colors that don't work in
+    other color palettes. The idea is that you can provide a color from the
+    current widget palette and shift it toward another color. For example,
+    you could get a red-shifted text color by supplying the windowText color
+    for a widget as color 1, and the full red as color 2. Then use the strength
+    args to weight the resulting color more toward the windowText or full red.
+    It's still important to test the resulting colors in multiple color schemes.
+    """
+
+    total = c1_strength + c2_strength
+
+    r = ((c1.red() * c1_strength) + (c2.red() * c2_strength)) / total
+    g = ((c1.green() * c1_strength) + (c2.green() * c2_strength)) / total
+    b = ((c1.blue() * c1_strength) + (c2.blue() * c2_strength)) / total
+
+    return QColor(r, g, b)
 
 class CodeEditorWidget(QPlainTextEdit):
     """A simple python editor widget.
@@ -55,8 +82,7 @@ class CodeEditorWidget(QPlainTextEdit):
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
         self.setWordWrapMode(QTextOption.NoWrap)
 
-        self._syntax_highlighter = PythonSyntaxHighlighter(self.document(), self.palette())
-        self._syntax_highlighter.setDocument(self.document())
+        self.set_highlighter(".py")
 
         self._line_number_area = _LineNumberArea(self)
 
@@ -84,6 +110,21 @@ class CodeEditorWidget(QPlainTextEdit):
 
 
         self.setReadOnly(True)
+
+    def set_highlighter(self,language):
+        print("Changing language view to "+language)
+        if language == ".py":
+            self._syntax_highlighter = PythonHighlighter(self.document())
+        elif language == ".cs":
+            self._syntax_highlighter = CsHighlighter(self.document())
+        elif language == ".java":
+            self._syntax_highlighter = CsHighlighter(self.document())
+        elif language == ".cpp":
+            self._syntax_highlighter = CsHighlighter(self.document())
+        else:
+            self._syntax_highlighter = NoneHighlighter(self.document())
+
+        #self._syntax_highlighter.setDocument(self.document())
 
     def add_globals(self, new_globals):
         """
