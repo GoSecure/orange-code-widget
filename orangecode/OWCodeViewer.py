@@ -9,7 +9,7 @@ from AnyQt.QtGui import (
     QTextCursor,QCursor
 )
 from AnyQt.QtWidgets import (
-    QTextEdit
+    QTextEdit,QPushButton
 )
 
 import Orange.data
@@ -22,6 +22,9 @@ from numpy import float64
 from numpy import nan
 
 import os, math
+import code
+import itertools
+import re
 
 class OWCodeViewer(OWWidget):
     name = "Code Viewer"
@@ -31,6 +34,7 @@ class OWCodeViewer(OWWidget):
     keywords = ["source", "code", "display" ,"programming"]
     directory = ""
 
+    show_configuration = False
 
     class Inputs:
         data = Input("Source Code", Orange.data.Table)
@@ -45,18 +49,37 @@ class OWCodeViewer(OWWidget):
 
         # GUI
         box = gui.widgetBox(self.controlArea, "Info")
-        self.infoa = gui.widgetLabel(box, '')
-        self.infob = gui.widgetLabel(box, '')
-        gui.lineEdit(self.controlArea, self, 'directory','Source Directory',box="Configuration",callback=self.directory_changed)
+        self.infoLabel = gui.widgetLabel(box, '')
+
         #self.display_no_source_selected()
 
         self.code_editor = CodeEditorWidget()
         self.controlArea.layout().addWidget(self.code_editor)
 
+        self.configMoreButton = QPushButton("Configuration")
+        self.configMoreButton.setCheckable(True)
+        self.configMoreButton.clicked.connect(self.switch_configuration_visibility)
+        self.controlArea.layout().addWidget(self.configMoreButton)
+
+        self.configurationBox = gui.widgetBox(self.controlArea, "Configuration")
+        gui.lineEdit(self.configurationBox, self, 'directory','Source Directory',callback=self.directory_changed)
+        self.refresh_configuration_box()
+
         #Test data
         #self.directory = "C:\\Code\\samples\\juliet-test-suite\\"
         #self.set_data(Table("orangecode/test.csv"))
 
+    def switch_configuration_visibility(self,e):
+        self.show_configuration = not(self.show_configuration)
+        self.refresh_configuration_box()
+
+    def refresh_configuration_box(self):
+        if(self.show_configuration):
+            self.configMoreButton.setText("Configuration <<")
+            self.configurationBox.show()
+        else:
+            self.configMoreButton.setText("Configuration >>")
+            self.configurationBox.hide()
 
     @Inputs.data
     def set_data(self, dataset):
@@ -76,46 +99,46 @@ class OWCodeViewer(OWWidget):
 
     def process_line(self,line):
         """
-        The extraction is based on columns name and values to avoid manual configuration.
-        It is expected that 
+        The extraction is based on values to avoid manual configuration.
         """
 
         self.source_file = ""
         self.source_line = -1
 
-        index_file = -1
-        index_line = -1
+        #code.interact(local=locals())
+
+        all_attributes_index = []
 
         #Guessing based on values
-        for i, var in enumerate(line.domain.variables):
-            if var.is_discrete and "file" in var.name.lower():
-                index_file = i
-            elif "line" in var.name.lower():
-                index_line = i
+        for var in itertools.chain(line.domain.attributes,line.domain.metas):
+            i = line.domain.index(var.name)
+            #print("{} -> {}".format(var.name,i))
+            all_attributes_index.append(i)
 
-        for i, cell in enumerate(line.values()):
-            val = cell.value
+        for attribute_index in all_attributes_index:
+            try:
+                line[attribute_index]
+            except IndexError:
+                print("More attributes than values on line {}".format(line))
+                continue
 
-            #Using index found previously
-            if index_file == i:
-                self.source_file = val
-            if index_line == i and (isinstance(val, float)) and not(math.isnan(val)):
-                self.source_line = int(val)
+            if(line[attribute_index] is not None):
+                val = line[attribute_index].value
+                if type(val) is str:
+                    val_parts = val.split(":")
+                    if(len(val_parts) == 2):
+                        if(val_parts[1].isnumeric()):
+                            self.source_file = val_parts[0]
+                            self.source_line = int(val_parts[1])
 
-            #Guessing based on values
-            if(self.source_file != "" and self.is_source_file(val)):
-                self.source_file = val
-            if(self.source_line == -1 and (isinstance(val, float))) and not(math.isnan(val)):
-                self.source_line = int(val)
-
-        #print("{}:{}".format(self.source_file,self.source_line))
-        if(self.source_file != ""):
-            filename, extension = os.path.splitext(self.source_file)
-            self.code_editor.set_highlighter(extension)
         self.update_source_file()
 
     def update_source_file(self):
         if(self.source_file != ""):
+            #Update highlighter
+            filename, extension = os.path.splitext(self.source_file)
+            self.code_editor.set_highlighter(extension)
+
             try:
                 with open(self.directory+"/"+self.source_file,'r') as file:
                     code = file.read()
@@ -145,20 +168,20 @@ class OWCodeViewer(OWWidget):
 
     # Information display
     def display_no_source_selected(self):
-        self.infoa.setText('No source file selected')
-        self.infob.setText("")
+        self.infoLabel.setText('No source file selected')
 
     def display_file_not_found(self):
-        self.infoa.setText('Source file not found')
-        self.infob.setText("")
+        self.infoLabel.setText('Source file not found')
 
     def display_error(self,message):
-        self.infoa.setText('An error has occured: '+message)
-        self.infob.setText("")
+        self.infoLabel.setText('An error has occured: '+message)
 
     def display_source_file(self):
-        self.infoa.setText('Source file: '+self.source_file)
-        self.infob.setText(("" if self.source_line == -1 else "Line:"+str(self.source_line)))
+        filename = self.source_file.split("/")[-1].split("\\")[-1]
+        line = ("" if self.source_line == -1 else " ~ Line: <b>"+str(self.source_line)+"</b>")
+
+        self.infoLabel.setText("Source file: <b>{}</b> {}".format(filename,line))
+        
 
 #For quick testing
 if __name__ == "__main__":

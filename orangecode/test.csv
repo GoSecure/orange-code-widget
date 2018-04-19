@@ -1,3 +1,3 @@
-File,LineNumber
-src\testcases\CWE259_Hard_Coded_Password\CWE259_Hard_Coded_Password__driverManager_01.java,4
-src\testcases\CWE259_Hard_Coded_Password\CWE259_Hard_Coded_Password__driverManager_02.java,5
+m#File,BugType
+src\testcases\CWE259_Hard_Coded_Password\CWE259_Hard_Coded_Password__driverManager_01.java:44,HARDCODED_PASSWORD
+src\testcases\CWE259_Hard_Coded_Password\CWE259_Hard_Coded_Password__driverManager_02.java:5,HARDCODED_PASSWORD
