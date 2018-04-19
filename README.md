@@ -25,7 +25,7 @@ Prepare the workspace with the **Code Viewer** widget connected to a data source
 
 To enter in interactive mode, place a table view before the widget and open both the **Data Table** and **Code Viewer** widget. The selection of the **Data Table** will instantly be reflected in the **Code Viewer** window.
 
-![Orange Code Viewer Widget](images/widget.png)
+![Orange Code Viewer Widget](images/workflow.png)
 
 
 ## License
