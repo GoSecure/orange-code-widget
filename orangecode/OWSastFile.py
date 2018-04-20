@@ -89,7 +89,7 @@ def open_filename_dialog(start_dir, start_filter, file_formats,
     return filename, file_format, filter
 
 class OWSastFile(OWWidget,RecentPathsWComboMixin):
-    name = "SAST File"
+    name = "Bugs File"
     id = "gosecure.widgets.data.sastfile"
     description = "Read bug report from various Static Analysis Scanning Tool (SAST)"
     icon = "icons/Bug.svg"
@@ -98,7 +98,7 @@ class OWSastFile(OWWidget,RecentPathsWComboMixin):
     keywords = ["data", "file", "load", "read", "code", "source", "spotbugs"]
 
     class Outputs:
-        data = Output("Data", Table, doc="Network packet")
+        data = Output("Data", Table, doc="Bugs")
 
 
     want_main_area = False

@@ -42,7 +42,7 @@ def colorize(c1, c1_strength, c2, c2_strength):
 
     return QColor(r, g, b)
 
-class CodeEditorWidget(QPlainTextEdit):
+class CodeEditorTextEdit(QPlainTextEdit):
     """A simple python editor widget.
     :signal: ``input(str)`` - emits the input input text when submitted
     :signal: ``output(str)`` - emits the output when eval'd/exec'd
@@ -64,7 +64,7 @@ class CodeEditorWidget(QPlainTextEdit):
         :param parent: The parent widget.
         """
 
-        super(CodeEditorWidget, self).__init__(parent)
+        super(CodeEditorTextEdit, self).__init__(parent)
 
         # local symbol table for this input widget.
         self._locals = {}
@@ -160,7 +160,7 @@ class CodeEditorWidget(QPlainTextEdit):
             self.insertPlainText("    ")
             event.accept()
         else:
-            super(CodeEditorWidget, self).keyPressEvent(event)
+            super(CodeEditorTextEdit, self).keyPressEvent(event)
 
     def line_number_area_width(self):
         """Calculate the width of the line number area."""
@@ -232,7 +232,7 @@ class CodeEditorWidget(QPlainTextEdit):
         :param event: resize event object
         """
 
-        super(CodeEditorWidget, self).resizeEvent(event)
+        super(CodeEditorTextEdit, self).resizeEvent(event)
 
         contents_rect = self.contentsRect()
         line_number_area_rect = QRect(
@@ -282,7 +282,7 @@ class CodeEditorWidget(QPlainTextEdit):
 
             #return True
 
-        super(CodeEditorWidget, self).wheelEvent(event)
+        super(CodeEditorTextEdit, self).wheelEvent(event)
 
     def zoom(self, direction):
         """

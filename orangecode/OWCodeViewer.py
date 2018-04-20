@@ -1,6 +1,6 @@
 import sys
 import numpy
-from orangecode.CodeEditorWidget import CodeEditorWidget
+from orangecode.CodeEditorTextEdit import CodeEditorTextEdit
 
 import AnyQt.QtCore
 from AnyQt.QtGui import (
@@ -53,7 +53,7 @@ class OWCodeViewer(OWWidget):
 
         #self.display_no_source_selected()
 
-        self.code_editor = CodeEditorWidget()
+        self.code_editor = CodeEditorTextEdit()
         self.controlArea.layout().addWidget(self.code_editor)
 
         self.configMoreButton = QPushButton("Configuration")

@@ -7,8 +7,9 @@ from Orange.data import Table, Domain, ContinuousVariable, DiscreteVariable, Str
 from Orange.data.io import FileFormat, _RE_DISCRETE_LIST, guess_data_type, sanitize_variable
 from Orange.util import flatten, namegen
 
-import xml.etree.ElementTree as ET
 
+
+from orangecode.reader.SpotbugsUtil import parse_spotbugs_report
 
 class SpotbugsReader(FileFormat):
     """Reader for comma separated files"""
@@ -19,46 +20,16 @@ class SpotbugsReader(FileFormat):
 
 
     def read(self):
-        tree = ET.parse(self.filename)
 
         exported_data = []
 
-        for bug in tree.findall("BugInstance"):
-            bug_type = bug.attrib.get("type","")
-            bug_priority = bug.attrib.get("priority","")
-            bug_rank = bug.attrib.get("rank","")
-            bug_category = bug.attrib.get("category","")
+        def append_bug(info):
+            exported_data.append(info)
 
-            #Source location metadata
-            bug_line = ""
-            bug_class = ""
-            bug_source = ""
-            source_lines = bug.findall("SourceLine")
-            if(len(source_lines) > 0):
-                bug_line   = source_lines[0].get("start","")
-                bug_class  = source_lines[0].get("classname","")
-                bug_source = source_lines[0].get("sourcepath","")
+        parse_spotbugs_report(self.filename,append_bug)
 
-            bug_method = ""
-            methods = bug.findall("Method")
-            if len(methods) > 0:
-                bug_method = methods[0].attrib.get("name","")
-
-            #Taint metadata
-            sink_method = ""
-            unknown_source = ""
-            strings = bug.findall("String")
-            for s in strings:
-                #print(s)
-                if("role" in s.attrib):
-                    if(s.attrib["role"] == "Sink method"):
-                        sink_method = s.attrib["value"]
-                    if(s.attrib["role"] == "Unknown source"):
-                        unknown_source = s.attrib["value"]
-            exported_data.append([bug_source,bug_line,bug_class,bug_method,bug_type,bug_priority,bug_rank,bug_category,sink_method,unknown_source])
-
-        headers=[["d#SourceFile","c#LineCode","d#BugClass","d#BugMethod","d#BugType","d#Priority","c#Rank","d#Category","d#SinkMethod","UnknownSource"]]
-        #         ["d"         ,"c"       ,"d"      ,"d"       ,"c"   ,"d"       ,"d"         ,"d"]]
+        headers=[["m#SourceFile","D#BugClass","D#BugMethod","D#BugType","D#Priority","C#Rank","D#Category","D#SinkMethod","D#UnknownSource"]]
+        #         ["d"         ,"d"      ,"d"       ,"c"   ,"d"       ,"d"         ,"d"]]
         return self.data_table(exported_data,headers)
 
 
