@@ -5,13 +5,13 @@
 1. Get the code of this widget 
 
 ```
-git clone .../orange-code-viewer
+git clone https://github.com/GoSecure/orange-code-widget
 ```
 
 2. Open Orange CLI python environment. (On Windows : `C:\Program Files (x86)\Orange\Orange Command Prompt.lnk`)
 
 ```
-cd [...]/orange-code-viewer
+cd [...]/orange-code-widget
 pip install -e .
 ```
 
