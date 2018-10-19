@@ -45,7 +45,8 @@ class CsHighlighter(QSyntaxHighlighter):
             '\\bthis\\b', '\\bthrow\\b', '\\btry\\b', '\\btypeof\\b',
             '\\buint\\b', '\\bulong\\b', '\\bunchecked\\b', '\\bunsafe\\b',
             '\\bushort\\b', '\\busing\\b', '\\bvirtual\\b', '\\bvoid\\b',
-            '\\bvolatile\\b', '\\bwhile\\b'
+            '\\bvolatile\\b', '\\bwhile\\b', 
+            '\\bpackage\\b', '\\bimport\\b', '\\bthrows\\b'
         ]
 
         self.highlightingRules = [(QRegExp(pattern), keywordFormat)
